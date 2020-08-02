@@ -1,0 +1,9 @@
+{
+  "common": {
+    "label": {
+      "name": "Nom",
+      "host": "Hôte",
+      "port": "Port"
+    }
+  }
+}

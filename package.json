@@ -1,0 +1,23 @@
+{
+  "name": "node-red-contrib-freebox",
+  "version": "0.0.3",
+  "description": "Freebox api calls for node-red",
+  "keywords": [
+    "node-red",
+    "freebox"
+  ],
+  "author": "Kevin Bonnoron",
+  "license": "ISC",
+  "node-red": {
+    "nodes": {
+      "freebox": "freebox.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KevinBonnoron/node-red-contrib-freebox"
+  },
+  "dependencies": {
+    "axios": "^0.19.2"
+  }
+}

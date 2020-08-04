@@ -3,7 +3,8 @@
     "label": {
       "name": "Nom",
       "host": "Hôte",
-      "port": "Port"
+      "port": "Port",
+      "server": "Serveur"
     }
   }
 }

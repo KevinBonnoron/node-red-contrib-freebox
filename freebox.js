@@ -2,287 +2,310 @@
 const crypto = require('crypto');
 const axios = require('axios');
 const util = require('util');
+const { EventEmitter } = require('events');
+
+const APPLICATION = {
+  appId: 'node-red-contrib-freebox',
+  appName: 'node-red Freebox API',
+  appVersion: '0.0.1',
+  deviceName: 'Node-red'
+};
 
 module.exports = function (RED) {
   class FreeboxServerNode {
     constructor(config) {
       RED.nodes.createNode(this, config);
       const node = this;
+
       // Freebox informations
-      node.freebox = {
-        baseUrl: '',
+      this.freebox = {
         uid: '',
         deviceName: '',
         deviceType: '',
+        baseUrl: ''
       };
 
-      // Application informtions
-      node.app = {
-        app_id: 'node-red-contrib-freebox',
-        app_name: 'node-red Freebox API',
-        app_version: '0.0.1',
-        device_name: 'Node-red',
-
-        app_token: '',
-        track_id: '',
-
-        status: '',
-        logged_in: false,
-
-        challenge: '',
-        password: '',
-        session_token: '',
-
-        permissions: {},
+      // Application informations
+      this.application = {
+        token: this.credentials.token || '',
+        trackId: this.credentials.trackId || '',
+        status: ''
       };
 
-      this.on('close', function () {
-        node.sessionClose();
-      });
+      // Session informations
+      this.session = {
+        token: '',
+        permissions: {}
+      };
 
-      this.connected = this.connect(config);
+      this._statusChanged = new EventEmitter();
+      node.on('close', () => this.logout());
+
+      this.init(config);
     }
 
     /**
-       * sessionClose method
-       *
-       * logout.
-       *
-       * @return void
-       */
-    async sessionClose() {
-      const app = this.app;
-      const node = this;
-
-      //Asking a new challenge
-      await node._freebox_api_request('login/logout', {});
-      app.logged_in = false; //Update login status
-      node.status({ fill: 'green', shape: 'dot', text: 'session open' });
-      RED.log.info('Session Close');
-    }
-
-    /**
-     * connect method
-     * Update freebox information
-     * @return Promise
+     * init
+     * Update freebox informations
+     * @return void
      */
-    connect(config) {
-      const { freebox, app } = this;
-      const node = this;
-
-      app.app_token = this.credentials.app_token;
-      app.track_id = this.credentials.track_id;
-
+    init(config) {
       const freeboxUrl = `http://${config.host}:${config.port}`;
       RED.log.info(`Connecting to freebox at ${freeboxUrl}`);
-      return axios({ url: `${freeboxUrl}/api_version` })
-        .then(({ data }) => {
-          if (!('uid' in data)) {
-            throw 'No uid in response';
-          }
+      axios({ url: `${freeboxUrl}/api_version` }).then(({ data }) => {
+        if (!('uid' in data)) {
+          throw 'No uid in response';
+        }
 
-          freebox.uid = data.uid;
-          freebox.deviceName = data.device_name;
-          freebox.deviceType = data.device_type;
+        this.freebox = {
+          uid: data.uid,
+          deviceName: data.device_name,
+          deviceType: data.device_type,
+          baseUrl: `${freeboxUrl}${data.api_base_url}${`v${data.api_version.substr(0, data.api_version.indexOf('.'))}`}`
+        };
 
-          const apiVersion = `v${data.api_version.substr(0, data.api_version.indexOf('.'))}`;
-          freebox.baseUrl = `${freeboxUrl}${data.api_base_url}${apiVersion}`;
-          node.status({ fill: 'green', shape: 'dot', text: 'connected' });
+        if (this.application.status !== 'granted') {
+          this.registerApplication();
+        }
+      }).catch((response) => {
+        if (response.config) {
+          RED.log.error(`Freebox ${response.config.url} error: ${util.inspect(response)}`);
+        } else {
+          RED.log.error(`Freebox error: ${util.inspect(response)}`);
+        }
 
-          if (app.app_token === '' && app.status === 'granted') {
-            return this.session();
-          } else {
-            return this.authorize();
-          }
-        })
-        .catch((response) => {
-          if (response.config) {
-            RED.log.error(`Freebox ${response.config.url} error: ${util.inspect(response)}`);
-          } else {
-            RED.log.error(`Freebox error: ${util.inspect(response)}`);
-          }
-
-          node.status({ fill: 'red', shape: 'ring', text: 'bad reply' });
-          return response;
-        })
-        ;
+        this._statusChanged.emit('application.error');
+      });
     }
 
     /**
-     * authorize
+     * registerApplication
+     * 
      * Register the app to the Freebox
      * A message will be displayed on the Freebox LCD asking the user to grant/deny access to the requesting app.
      *
      * @return void
      */
-    authorize() {
-      const { app } = this;
+    registerApplication() {
       const node = this;
 
       // Do we already register the app before ?
-      if (app.track_id) {
-        return this.call(`/login/authorize/${app.track_id}`).then(({ status, challenge }) => {
-          app.status = status; // Should be pending until the app is accepted
+      if (this.application.trackId) {
+        return this._internalApiCall(`/login/authorize/${this.application.trackId}`).then(({ status }) => {
+          this.application.status = status; // Should be pending until the app is accepted
 
           // The user must accept the app on the box
           switch (status) {
             case 'pending':
-              if (challenge !== app.challenge) {
-                app.challenge = challenge;
-                RED.log.error('The app is not accepted. You must register it.');
-              }
-              return this.authorize();
+              RED.log.info('The app is not accepted. You must register it.');
+              this._statusChanged.emit('application.pending');
+
+              this.registerApplication();
+              break;
 
             case 'granted':
-              app.challenge = challenge;
+              RED.log.info('Application registered');
+              this._statusChanged.emit('application.granted');
 
-              node.credentials.app_token = app.app_token;
-              node.credentials.track_id = app.track_id;
-              RED.nodes.addCredentials(node.id, node.credentials);
-              return this.session();
+              this.credentials = {
+                token: this.application.token,
+                trackId: this.application.trackId
+              };
+              RED.nodes.addCredentials(node.id, this.credentials);
+              break;
+
+            case 'timeout':
+              RED.log.info('Application not registered in time. Sending another request...');
+              this._statusChanged.emit('application.timeout');
+
+              RED.nodes.deleteCredentials(node.id);
+              this.credentials = {};
+              this.application = {};
+              this.session = {};
+              this.registerApplication();
+              break;
+
 
             default:
-              RED.log.error('Register app failed.', 'info');
+              RED.log.error(`Register application failed. Status is ${status}. Deleting credentials`);
+              this._statusChanged.emit('application.unknown');
+
+              RED.nodes.deleteCredentials(node.id);
+              this.credentials = {};
+              this.application = {};
+              this.session = {};
           }
         });
       } else {
         const data = {
-          app_id: app.app_id,
-          app_name: app.app_name,
-          app_version: app.app_version,
-          device_name: app.device_name,
+          app_id: APPLICATION.appId,
+          app_name: APPLICATION.appName,
+          app_version: APPLICATION.appVersion,
+          device_name: APPLICATION.deviceName,
         };
 
-        return this.call('/login/authorize', data).then(({ app_token, track_id }) => {
-          app.app_token = app_token;
-          app.track_id = track_id;
-          RED.log.info('Register app token ' + app.app_token);
-          return this.authorize();
+        return this._internalApiCall('/login/authorize', data).then(({ app_token, track_id }) => {
+          RED.log.info('Register app token ' + app_token);
+          this.application.token = app_token;
+          this.application.trackId = track_id;
+          this.application.status = '';
+          return this.registerApplication();
         });
       }
     }
 
     /**
-     * session method
+     * refreshToken
+     * 
+     * Check if session is valid or generate a new one
      *
-     * Update login status and challenge.
-     * If needed log the app = Ask for a session token.
-     *
-     * @return void
+     * @return Promise
      */
-    session() {
-      const { app } = this;
-      const node = this;
-
-      //Asking a new challenge
-      this.call('/login').then(({ logged_in, challenge }) => {
-        app.logged_in = logged_in; //Update login status
-        app.challenge = challenge; //Update challenge
-
-        //Update password
-        app.password = crypto
-          .createHmac('sha1', app.app_token)
-          .update(app.challenge)
-          .digest('hex')
-          ;
-
+    refreshSession() {
+      return this._internalApiCall('/login').then(({ logged_in, challenge }) => {
         //If we're not logged_in
-        if (!app.logged_in) {
-          //POST app_id & password
+        if (!logged_in) {
           const data = {
-            app_id: app.app_id,
-            app_version: app.app_version,
-            password: app.password,
+            app_id: APPLICATION.appId,
+            app_version: APPLICATION.appVersion,
+            password: crypto.createHmac('sha1', this.application.token).update(challenge).digest('hex')
           };
 
-          this.call('/login/session', data).then(({ challenge, session_token, permissions }) => {
-            app.logged_in = true; //Update login status
-            app.challenge = challenge; //Update challenge
+          // Requesting new session
+          return this._internalApiCall('/login/session', data).then(({ session_token, permissions }) => {
+            RED.log.info(`Session opened`);
+            this._statusChanged.emit('session.opened');
 
-            app.session_token = session_token; //Save session token
-            app.permissions = permissions;
-
-            node.status({
-              fill: 'green',
-              shape: 'dot',
-              text: 'session open',
-            });
-            RED.log.info(`Session Opened permissions: ${JSON.stringify(app.permissions)}`);
+            this.session = {
+              token: session_token,
+              permissions
+            }
           });
         }
       });
     }
 
-    call(url, data) {
-      const { app, freebox } = this;
+    /**
+     * logout
+     *
+     * @return void
+     */
+    logout() {
+      this.call('/login/logout', {}).then(() => {
+        RED.log.info('Session closed');
+        this._statusChanged.emit('session.closed');
+      });
+    }
 
+    /**
+     * 
+     * @param {string} url 
+     * @param {object | undefined} data 
+     */
+    apiCall(url, data) {
+      RED.log.info(`${data ? 'POST' : 'GET'} ${url}`);
+      return this.refreshSession().then(() => this._internalApiCall(url, data, { 'X-Fbx-App-Auth': this.session.token }));
+    }
+
+    /**
+     * Make call to api with url, data and headers. Use internally to call api with or without session token.
+     * @private
+     * 
+     * @param {string} url 
+     * @param {object | undefined} data 
+     * @param {object} headers 
+     */
+    _internalApiCall(url, data = undefined, headers = {}) {
+      const { freebox } = this;
       const options = {
         url: `${freebox.baseUrl}${url}`,
         data,
         method: data ? 'POST' : 'GET',
-        headers: {
-          'X-Fbx-App-Auth': app.session_token
-        }
+        headers
       };
 
-
-      RED.log.info(`Calling ${options.method} ${options.url} ${app.session_token}...`);
       return axios(options)
         .then(({ data }) => data.result)
         .catch((response) => {
-          RED.log.error(`FreeboxApiReq ${response.config.url} response error: ${util.inspect(response.toJSON())}`);
-          app.logged_in = false; //Update login status
+          RED.log.error(`${response.config.method} ${response.config.url} error: ${util.inspect(response)}`);
           return response;
-        })
-        ;
+        });
+    }
+
+    get statusChanged() {
+      return this._statusChanged;
     }
   }
 
   RED.nodes.registerType('freebox-server', FreeboxServerNode, {
     credentials: {
-      app_token: { type: 'password' },
-      track_id: { type: 'password' },
+      token: { type: 'password' },
+      trackId: { type: 'password' },
     },
   });
 
   /**
-   * Abstract class for all operations
+   * Base class for all operations
    */
   class FreeboxNode {
-    constructor(config, endPoint) {
+    constructor(config, apiCallOptions = { url: '', withPayload: false }) {
       RED.nodes.createNode(this, config);
       const node = this;
 
-      // Retrieve the config node
+      // Retrieve the server config node
       const serverNode = RED.nodes.getNode(config.server);
       if (!serverNode) {
         RED.log.error('Server not configured');
         node.status({ fill: 'red', shape: 'ring', text: 'not connected' });
       } else {
-        node.status({ fill: 'green', shape: 'dot', text: 'connected' });
+        serverNode.statusChanged.on('application.granted', () => node.status({ fill: 'green', shape: 'dot', text: 'connected' }));
+        serverNode.statusChanged.on('application.pending', () => node.status({ fill: 'yellow', shape: 'dot', text: 'server validation pending' }));
+        serverNode.statusChanged.on('application.timeout', () => node.status({ fill: 'orange', shape: 'dot', text: 'server validation timeout' }));
+        serverNode.statusChanged.on('application.error', () => node.status({ fill: 'red', shape: 'dot', text: 'invalid configuration' }));
+        serverNode.statusChanged.on('disconnected', () => node.status({ fill: 'red', shape: 'ring', text: 'disconnected' }));
       }
 
-      node.on('input', (msg) => {
-        if (serverNode && serverNode.freebox) {
-          serverNode.call(endPoint, msg.payload).then((data) => node.send({
-            payload: data
-          }));
-        } else {
+      node.on('input', (msg, send, done) => {
+        send = send || function () { node.send.apply(node, arguments) };
+        if (!serverNode || !serverNode.freebox) {
           RED.log.info('Freebox server is not configured');
+          return done();
         }
-      });
 
-      node.on('close', () => {
-        // tidy up any async code here - shutdown connections and so on.
+        // Call the api
+        const { url, withPayload } = apiCallOptions;
+        serverNode.apiCall(url, withPayload ? msg.payload : undefined).then((payload) => {
+          node.send({ payload });
+          node.status({ fill: 'green', shape: 'dot', text: `called at: ${this.prettyDate}` })
+          done();
+        });
+      });
+    }
+
+    get prettyDate() {
+      return new Date().toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour12: false,
+        hour: 'numeric',
+        minute: 'numeric',
       });
     }
   }
 
   class FreeboxConnectedDevicesNode extends FreeboxNode {
     constructor(config) {
-      super(config, '/lan/browser/pub');
+      super(config, { url: '/lan/browser/pub', withPayload: false });
     }
   }
 
   RED.nodes.registerType('freebox-connected-devices', FreeboxConnectedDevicesNode);
+
+  class FreeboxConnectionStatusNode extends FreeboxNode {
+    constructor(config) {
+      super(config, { url: '/connection', withPayload: false });
+    }
+  }
+
+  RED.nodes.registerType('freebox-connection-status', FreeboxConnectionStatusNode);
 };

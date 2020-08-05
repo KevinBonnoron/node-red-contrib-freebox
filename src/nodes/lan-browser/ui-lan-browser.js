@@ -5,7 +5,7 @@ RED.nodes.registerType('lan-browser', {
   outputs: 1,
   defaults: {
     name: { value: '' },
-    server: { value: '', type: 'server', required: true },
+    server: { value: '', type: 'freebox-server', required: true },
   },
   icon: 'freebox.png',
   paletteLabel: 'lan browser',

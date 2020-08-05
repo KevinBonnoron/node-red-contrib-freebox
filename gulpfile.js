@@ -41,7 +41,7 @@ const uiFormWrap = '<script type="text/x-red" data-template-name="<%= data.type 
 const uiHelpWrap = '<script type="text/x-red" data-help-name="<%= data.type %>"><%= data.contents %></script>';
 
 const nodeMap = {
-  'config-server': { doc: 'config-server', type: 'server' },
+  'freebox-server': { doc: 'freebox-server', type: 'freebox-server' },
   connection: { doc: 'connection', type: 'connection' },
   'lan-browser': { doc: 'lan-browser', type: 'lan-browser' }
 };

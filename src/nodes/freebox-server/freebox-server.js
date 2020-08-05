@@ -13,11 +13,13 @@ const APPLICATION = {
   deviceName: 'Node-red'
 };
 
+const SESSION_TIMEOUT = 600000; // 10 minutes
+
 module.exports = function (RED) {
   https.globalAgent.options.ca = [];
   https.globalAgent.options.ca.push(fs.readFileSync(`${__dirname}/ssl/Freebox ECC Root CA.pem`));
 
-  class ConfigServerNode {
+  class FreeboxServerNode {
     constructor(config) {
       RED.nodes.createNode(this, config);
       const node = this;
@@ -40,7 +42,8 @@ module.exports = function (RED) {
       // Session informations
       this.session = {
         token: '',
-        permissions: {}
+        permissions: {},
+        lastGenerationTimestamp: new Date(0).getTime()
       };
 
       this._statusChanged = new EventEmitter();
@@ -167,8 +170,12 @@ module.exports = function (RED) {
      * @return Promise
      */
     refreshSession() {
+      if (this.session.lastGenerationTimestamp + SESSION_TIMEOUT > new Date().getTime()) {
+        return Promise.resolve();
+      }
+
       return this._internalApiCall('/login').then(({ logged_in, challenge }) => {
-        //If we're not logged_in
+        // If we're not logged_in
         if (!logged_in) {
           const data = {
             app_id: APPLICATION.appId,
@@ -184,7 +191,8 @@ module.exports = function (RED) {
             this.session = {
               token: session_token,
               permissions
-            }
+            };
+            this.session.lastGenerationTimestamp = new Date().getTime();
           });
         }
       });
@@ -232,7 +240,7 @@ module.exports = function (RED) {
       return axios(options)
         .then(({ data }) => data.result)
         .catch((response) => {
-          RED.log.error(`${response.config.method} ${response.config.url} error: ${util.inspect(response)}`);
+          // RED.log.error(`${response.config.method} ${response.config.url} error: ${util.inspect(response)}`);
           return response;
         });
     }
@@ -242,7 +250,7 @@ module.exports = function (RED) {
     }
   }
 
-  RED.nodes.registerType('server', ConfigServerNode, {
+  RED.nodes.registerType('freebox-server', FreeboxServerNode, {
     credentials: {
       token: { type: 'password' },
       trackId: { type: 'password' },

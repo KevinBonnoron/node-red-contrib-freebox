@@ -12,5 +12,5 @@ This API provides Freebox connection settings information.
 the name of the node
 
 ### Server
-- Type: `config-server`
-the config server instance
+- Type: `freebox-server`
+the freebox server instance

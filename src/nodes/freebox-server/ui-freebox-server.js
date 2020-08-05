@@ -1,4 +1,4 @@
-RED.nodes.registerType('server', {
+RED.nodes.registerType('freebox-server', {
   category: 'config',
   defaults: {
     host: { value: 'https://mafreebox.freebox.fr', required: true },

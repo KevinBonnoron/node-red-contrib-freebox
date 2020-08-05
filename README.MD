@@ -12,7 +12,7 @@ Included nodes :
 cd ~/.node-red
 npm install node-red-contrib-freebox
 ```
-On the first usage of the node you'll need to add a connection to the server. When done, it will ask for application authorization on the freebox server. You'll have 30 seconds to authorize the application. In cas of timeout another request will be done.
+On the first usage of the node you'll need to add a connection to the server. When done, it will ask for application authorization on the freebox server. You'll have 30 seconds to authorize the application. In case of timeout, another request will be done.
 
 ## Credits
 Based on :

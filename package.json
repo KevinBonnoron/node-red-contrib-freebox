@@ -16,6 +16,7 @@
     "nodes": {
       "freebox-server": "src/nodes/freebox-server/freebox-server.js",
       "connection": "src/nodes/connection/connection.js",
+      "api": "src/nodes/api/api.js",
       "lan-browser": "src/nodes/lan-browser/lan-browser.js"
     }
   },

@@ -43,7 +43,8 @@ const uiHelpWrap = '<script type="text/x-red" data-help-name="<%= data.type %>">
 const nodeMap = {
   'freebox-server': { doc: 'freebox-server', type: 'freebox-server' },
   connection: { doc: 'connection', type: 'connection' },
-  'lan-browser': { doc: 'lan-browser', type: 'lan-browser' }
+  'lan-browser': { doc: 'lan-browser', type: 'lan-browser' },
+  api: { doc: 'api', type: 'api' }
 };
 
 let nodemonInstance;

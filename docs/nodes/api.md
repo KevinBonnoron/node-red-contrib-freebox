@@ -1,6 +1,6 @@
 # Connection
 
-This node provides Freebox connection settings information.
+This API provides a way to call api via the msg.url parameter (you can pass msg.payload as the body)
 
 ## Configuration
 

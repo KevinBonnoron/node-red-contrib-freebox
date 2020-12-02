@@ -1,1 +1,7 @@
 node_modules
+nodes/**/*.html
+!nodes/**/ui-*.html
+.vscode/
+.devcontainer/
+package-lock.json
+yarn.lock

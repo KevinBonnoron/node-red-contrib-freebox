@@ -1,9 +1,6 @@
 # Lan browser
 
-With the LAN browser API you get information on hosts on the Freebox Server local network.
-
-# Connection
-This API provides Freebox connection settings information.
+This node provide informations on hosts on the Freebox Server local network.
 
 ## Configuration
 

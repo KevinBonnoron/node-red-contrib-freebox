@@ -6,6 +6,7 @@ The documentation for all freebox api are available [here](https://dev.freebox.f
 Included nodes :
  - lan browser (call /lan/browser/pub)
  - connection (call /connection)
+ - api (used to call any endpoint with msg.url parameter)
 
 ## Installation
 ```

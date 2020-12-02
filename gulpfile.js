@@ -234,7 +234,6 @@ task('buildEditorFiles', (done) => {
   const tasks = folders.map((folder) => {
     currentFolder = folder;
     return src([
-      'lib/common/*',
       `src/nodes/${folder}/ui-*.+(js|html)`,
       `docs/nodes/${nodeMap[folder].doc}.md`,
     ])
@@ -306,7 +305,7 @@ module.exports = {
     runNodemonAndBrowserSync,
     function watcher(done) {
       watch(
-        ['lib/*', 'src/nodes/*/ui-*', 'src/nodes/*/*.json', 'docs/node/*.md'],
+        ['src/common/*', 'src/nodes/*/ui-*', 'src/nodes/*/*.json', 'docs/node/*.md'],
         series(
           'cleanFiles',
           'buildEditorFiles',
@@ -315,7 +314,7 @@ module.exports = {
       );
       // only server side files modified restart node-red only
       watch(
-        ['src/nodes/*/*.js', '!src/nodes/*/ui-*.js', '', 'lib/*.js'],
+        ['src/common/*', 'src/nodes/*/*.js', '!src/nodes/*/ui-*.js'],
         restartNodemon
       );
       done();

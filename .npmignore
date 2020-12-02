@@ -1,7 +1,6 @@
 docs/
-lib
-!nodes/**/*.html
-nodes/**/ui-*
+!src/nodes/**/*.html
+src/nodes/**/ui-*
 gulpfile.js
 package-lock.json
 yarn.lock

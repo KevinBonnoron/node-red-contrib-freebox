@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-freebox",
-  "version": "0.0.5",
+  "version": "0.0.9",
   "description": "Freebox api calls for node-red",
   "keywords": [
     "node-red",
@@ -9,7 +9,7 @@
   "author": "Kevin Bonnoron",
   "license": "ISC",
   "scripts": {
-    "dev": "gulp start",
+    "start": "gulp start",
     "prepublish": "gulp build"
   },
   "node-red": {
@@ -48,6 +48,7 @@
     "markdown-it-container": "^3.0.0",
     "markdown-it-inline-comments": "^1.0.1",
     "merge-stream": "^2.0.0",
+    "node-red": "^1.2.6",
     "nodemon": "^2.0.4"
   }
 }

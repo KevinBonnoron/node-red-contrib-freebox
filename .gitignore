@@ -1,6 +1,6 @@
 node_modules
-nodes/**/*.html
-!nodes/**/ui-*.html
+src/nodes/**/*.html
+!src/nodes/**/ui-*.html
 .vscode/
 .devcontainer/
 package-lock.json

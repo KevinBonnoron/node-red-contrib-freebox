@@ -1,4 +1,4 @@
-const prettyData = require('../src/helpers/date.helper');
+const prettyData = require('../helpers/date.helper');
 
 /**
  * Base class for all operations

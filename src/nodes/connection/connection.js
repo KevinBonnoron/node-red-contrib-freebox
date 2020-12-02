@@ -1,6 +1,6 @@
 'use strict';
 
-const BaseNode = require('../../../lib/base.node');
+const BaseNode = require('../../common/base.node');
 
 module.exports = (RED) => {
   class ConnectionNode extends BaseNode {

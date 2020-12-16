@@ -8,6 +8,4 @@ const prettyDate = () => {
   });
 }
 
-module.exports = {
-  prettyDate
-}
+module.exports = prettyDate;

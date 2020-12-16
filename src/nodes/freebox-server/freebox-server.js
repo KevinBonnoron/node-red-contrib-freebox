@@ -16,8 +16,7 @@ const APPLICATION = {
 const SESSION_TIMEOUT = 600000; // 10 minutes
 
 module.exports = function (RED) {
-  https.globalAgent.options.ca = [];
-  https.globalAgent.options.ca.push(fs.readFileSync(`${__dirname}/ssl/Freebox ECC Root CA.pem`));
+  axios.defaults.httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
   class FreeboxServerNode {
     constructor(config) {

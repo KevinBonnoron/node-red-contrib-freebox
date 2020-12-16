@@ -5,7 +5,13 @@ const BaseNode = require('../../common/base.node');
 module.exports = (RED) => {
   class ConnectionNode extends BaseNode {
     constructor(config) {
-      super(config, RED, { url: '/connection', withPayload: false });
+      super(config, RED);
+    }
+
+    getData() {
+      return {
+        url: '/connection'
+      }
     }
   }
 

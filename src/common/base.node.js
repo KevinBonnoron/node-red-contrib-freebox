@@ -1,10 +1,20 @@
-const prettyData = require('../helpers/date.helper');
+'use strict';
+const prettyDate = require('../helpers/date.helper');
+
+const STATUSES = {
+  NOT_CONNECTED: { fill: 'red', shape: 'ring', text: 'not connected' },
+  CONNECTED: { fill: 'green', shape: 'dot', text: 'connected' },
+  SERVER_VALIDATION_PENDING: { fill: 'yellow', shape: 'dot', text: 'server validation pending' },
+  SERVER_VALIDATION_TIMEOUT: { fill: 'orange', shape: 'dot', text: 'server validation timeout' },
+  INVALID_CONFIGURATION: { fill: 'red', shape: 'dot', text: 'invalid configuration' },
+  DISCONNECTED: { fill: 'red', shape: 'ring', text: 'disconnected' }
+}
 
 /**
  * Base class for all operations
  */
 class BaseNode {
-  constructor(config, RED, apiCallOptions = { url: '', withPayload: false }) {
+  constructor(config, RED) {
     RED.nodes.createNode(this, config);
     const node = this;
 
@@ -12,13 +22,13 @@ class BaseNode {
     const serverNode = RED.nodes.getNode(config.server);
     if (!serverNode) {
       RED.log.error('Server not configured');
-      node.status({ fill: 'red', shape: 'ring', text: 'not connected' });
+      node.status(STATUSES.NOT_CONNECTED);
     } else {
-      serverNode.statusChanged.on('application.granted', () => node.status({ fill: 'green', shape: 'dot', text: 'connected' }));
-      serverNode.statusChanged.on('application.pending', () => node.status({ fill: 'yellow', shape: 'dot', text: 'server validation pending' }));
-      serverNode.statusChanged.on('application.timeout', () => node.status({ fill: 'orange', shape: 'dot', text: 'server validation timeout' }));
-      serverNode.statusChanged.on('application.error', () => node.status({ fill: 'red', shape: 'dot', text: 'invalid configuration' }));
-      serverNode.statusChanged.on('disconnected', () => node.status({ fill: 'red', shape: 'ring', text: 'disconnected' }));
+      serverNode.statusChanged.on('application.granted', () => node.status(STATUSES.CONNECTED));
+      serverNode.statusChanged.on('application.pending', () => node.status(STATUSES.SERVER_VALIDATION_PENDING));
+      serverNode.statusChanged.on('application.timeout', () => node.status(STATUSES.SERVER_VALIDATION_TIMEOUT));
+      serverNode.statusChanged.on('application.error', () => node.status(STATUSES.INVALID_CONFIGURATION));
+      serverNode.statusChanged.on('disconnected', () => node.status(STATUSES.DISCONNECTED));
     }
 
     node.on('input', (msg, send, done) => {
@@ -28,14 +38,22 @@ class BaseNode {
         return done();
       }
 
+      const { url, payload } = this.getData(msg);
+
       // Call the api
-      const { url, withPayload } = apiCallOptions;
-      serverNode.apiCall(url, withPayload ? msg.payload : undefined).then((payload) => {
+      serverNode.apiCall(url, payload).then((payload) => {
         node.send({ payload });
         node.status({ fill: 'green', shape: 'dot', text: `called at: ${prettyDate()}` })
         done();
       });
     });
+  }
+
+  getData(msg) {
+    return {
+      url: msg.url,
+      payload: msg.payload
+    }
   }
 }
 

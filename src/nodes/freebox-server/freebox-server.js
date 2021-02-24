@@ -1,15 +1,14 @@
-'use strict';
 const crypto = require('crypto');
 const https = require('https');
-const fs = require('fs');
 const axios = require('axios');
 const util = require('util');
 const { EventEmitter } = require('events');
+const package = require(`${process.cwd()}/package.json`);
 
 const APPLICATION = {
-  appId: 'node-red-contrib-freebox',
+  appId: package.name,
   appName: 'node-red Freebox API',
-  appVersion: '0.0.1',
+  appVersion: package.version,
   deviceName: 'Node-red'
 };
 
@@ -151,7 +150,7 @@ module.exports = function (RED) {
           device_name: APPLICATION.deviceName,
         };
 
-        return this._internalApiCall('/login/authorize', data).then(({ app_token, track_id }) => {
+        return this._internalApiCall('/login/authorize', { data }).then(({ app_token, track_id }) => {
           RED.log.info('Register app token ' + app_token);
           this.application.token = app_token;
           this.application.trackId = track_id;
@@ -183,7 +182,7 @@ module.exports = function (RED) {
           };
 
           // Requesting new session
-          return this._internalApiCall('/login/session', data).then(({ session_token, permissions }) => {
+          return this._internalApiCall('/login/session', { data }).then(({ session_token, permissions }) => {
             RED.log.info(`Session opened`);
             this._statusChanged.emit('session.opened');
 
@@ -203,20 +202,28 @@ module.exports = function (RED) {
      * @return void
      */
     logout() {
-      this.call('/login/logout', {}).then(() => {
+      this.apiCall('/login/logout', { method: 'POST' }).then(() => {
         RED.log.info('Session closed');
         this._statusChanged.emit('session.closed');
       });
     }
 
     /**
-     * 
      * @param {string} url 
-     * @param {object | undefined} data 
+     * @param {object} options 
      */
-    apiCall(url, data) {
-      RED.log.info(`${data ? 'POST' : 'GET'} ${url}`);
-      return this.refreshSession().then(() => this._internalApiCall(url, data, { 'X-Fbx-App-Auth': this.session.token }));
+    apiCall(url, options = {}) {
+      const { method = 'GET' } = options;
+      RED.log.info(`${method} ${url}`);
+
+      // Add the needed header for authentication
+      return this.refreshSession().then(() => {
+        const { headers = {} } = options;
+        headers['X-Fbx-App-Auth'] = this.session.token;
+        options.headers = headers;
+  
+        return this._internalApiCall(url, options);
+      });
     }
 
     /**
@@ -224,22 +231,21 @@ module.exports = function (RED) {
      * @private
      * 
      * @param {string} url 
-     * @param {object | undefined} data 
-     * @param {object} headers 
+     * @param {object} options 
      */
-    _internalApiCall(url, data = undefined, headers = {}) {
+    _internalApiCall(url, options = {}) {
       const { freebox } = this;
-      const options = {
+      const { method = options.data ? 'POST' : 'GET' } = options;
+      const callOptions = {
         url: `${freebox.baseUrl}${url}`,
-        data,
-        method: data ? 'POST' : 'GET',
-        headers
+        ...options,
+        method
       };
 
-      return axios(options)
+      return axios(callOptions)
         .then(({ data }) => data.result)
         .catch((response) => {
-          // RED.log.error(`${response.config.method} ${response.config.url} error: ${util.inspect(response)}`);
+          RED.log.error(`${response.config.method} ${response.config.url} error: ${util.inspect(response)}`);
           return response;
         });
     }

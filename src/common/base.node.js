@@ -38,10 +38,10 @@ class BaseNode {
         return done();
       }
 
-      const { url, payload } = this.getData(msg);
+      const { url, payload, method } = this.getData(msg);
 
       // Call the api
-      serverNode.apiCall(url, payload).then((payload) => {
+      serverNode.apiCall(url, { method, data: payload }).then((payload) => {
         node.send({ payload });
         node.status({ fill: 'green', shape: 'dot', text: `called at: ${prettyDate()}` })
         done();
@@ -50,9 +50,12 @@ class BaseNode {
   }
 
   getData(msg) {
+    const { url, payload, method = payload !== undefined ? 'POST' : 'GET' } = msg;
+
     return {
-      url: msg.url,
-      payload: msg.payload
+      url,
+      payload,
+      method
     }
   }
 }

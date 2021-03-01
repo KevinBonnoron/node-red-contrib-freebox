@@ -12,6 +12,7 @@ const APPLICATION = {
   deviceName: 'Node-red'
 };
 
+const REGISTER_APPLICATION_TIMEOUT = 90000 // 1 minute 30
 const SESSION_TIMEOUT = 600000; // 10 minutes
 
 module.exports = function (RED) {
@@ -103,9 +104,13 @@ module.exports = function (RED) {
           // The user must accept the app on the box
           switch (status) {
             case 'pending':
-              RED.log.info('The app is not accepted. You must register it.');
-              this._statusChanged.emit('application.pending');
+              const currentTimestamp = new Date().getDate();
+              if (this._lastPendingCheck === undefined || currentTimestamp > this._lastPendingCheck + REGISTER_APPLICATION_TIMEOUT) {
+                RED.log.info('The app is not accepted. You must register it.');
+                this._lastPendingCheck = currentTimestamp;
+              }
 
+              this._statusChanged.emit('application.pending');
               this.registerApplication();
               break;
 

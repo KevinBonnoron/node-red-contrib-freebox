@@ -7,7 +7,8 @@ const STATUSES = {
   SERVER_VALIDATION_PENDING: { fill: 'yellow', shape: 'dot', text: 'server validation pending' },
   SERVER_VALIDATION_TIMEOUT: { fill: 'orange', shape: 'dot', text: 'server validation timeout' },
   INVALID_CONFIGURATION: { fill: 'red', shape: 'dot', text: 'invalid configuration' },
-  DISCONNECTED: { fill: 'red', shape: 'ring', text: 'disconnected' }
+  DISCONNECTED: { fill: 'red', shape: 'ring', text: 'disconnected' },
+  URL_PARAMETER_MANDATORY: { fill: 'red', shape: 'dot', text: `Missing {url} parameter` }
 }
 
 /**
@@ -38,11 +39,15 @@ class BaseNode {
         return done();
       }
 
-      const { url, payload, method } = this.getData(msg);
+      const { url, payload, method, ...rest } = this.getData(msg);
+      if (url === undefined) {
+        node.status(STATUSES.URL_PARAMETER_MANDATORY);
+        return done();
+      }
 
       // Call the api
       serverNode.apiCall(url, { method, data: payload }).then((payload) => {
-        node.send({ payload });
+        node.send({ payload, ...rest });
         node.status({ fill: 'green', shape: 'dot', text: `called at: ${prettyDate()}` })
         done();
       });
@@ -50,12 +55,13 @@ class BaseNode {
   }
 
   getData(msg) {
-    const { url, payload, method = payload !== undefined ? 'POST' : 'GET' } = msg;
+    const { url, payload, method = payload !== undefined ? 'POST' : 'GET', ...rest } = msg;
 
     return {
       url,
       payload,
-      method
+      method,
+      ...rest
     }
   }
 }

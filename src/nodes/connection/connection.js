@@ -8,9 +8,11 @@ module.exports = (RED) => {
       super(config, RED);
     }
 
-    getData() {
+    getData(msg) {
       return {
-        url: '/connection'
+        ...msg,
+        url: '/connection',
+        method: 'GET',
       }
     }
   }

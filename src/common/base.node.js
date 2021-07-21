@@ -8,6 +8,8 @@ const STATUSES = {
   SERVER_VALIDATION_TIMEOUT: { fill: 'orange', shape: 'dot', text: 'server validation timeout' },
   INVALID_CONFIGURATION: { fill: 'red', shape: 'dot', text: 'invalid configuration' },
   DISCONNECTED: { fill: 'red', shape: 'ring', text: 'disconnected' },
+  CALLED_AT: { build: (date) => ({ fill: 'green', shape: 'dot', text: `called at: ${date}` }) },
+  ERROR: { fill: 'red', shape: 'dot', text: 'Error' },
   URL_PARAMETER_MANDATORY: { fill: 'red', shape: 'dot', text: `Missing {url} parameter` }
 }
 
@@ -30,6 +32,7 @@ class BaseNode {
       serverNode.statusChanged.on('application.timeout', () => node.status(STATUSES.SERVER_VALIDATION_TIMEOUT));
       serverNode.statusChanged.on('application.error', () => node.status(STATUSES.INVALID_CONFIGURATION));
       serverNode.statusChanged.on('disconnected', () => node.status(STATUSES.DISCONNECTED));
+      serverNode.statusChanged.on('error', () => node.status(STATUSES.ERROR));
     }
 
     node.on('input', (msg, send, done) => {
@@ -48,7 +51,7 @@ class BaseNode {
       // Call the api
       serverNode.apiCall(url, { method, data: payload }).then((payload) => {
         node.send({ payload, ...rest });
-        node.status({ fill: 'green', shape: 'dot', text: `called at: ${prettyDate()}` })
+        node.status(STATUSES.CALLED_AT.build(prettyDate()))
         done();
       });
     });

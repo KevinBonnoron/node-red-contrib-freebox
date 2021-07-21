@@ -28,9 +28,9 @@
     "axios": "^0.21.1"
   },
   "devDependencies": {
-    "autoprefixer": "^10.2.4",
-    "browser-sync": "^2.26.14",
-    "cssnano": "^4.1.10",
+    "autoprefixer": "^10.3.1",
+    "browser-sync": "^2.27.4",
+    "cssnano": "^5.0.6",
     "del": "^6.0.0",
     "gulp": "^4.0.2",
     "gulp-cheerio": "^1.0.0",
@@ -39,16 +39,18 @@
     "gulp-if": "^3.0.0",
     "gulp-markdownit": "^1.0.3",
     "gulp-postcss": "^9.0.0",
-    "gulp-sass": "^4.1.0",
+    "gulp-sass": "^5.0.0",
     "gulp-terser": "^2.0.1",
     "gulp-util": "^3.0.8",
     "gulp-wrap": "^0.15.0",
     "lazypipe": "^1.0.2",
-    "markdown-it": "^12.0.4",
+    "markdown-it": "^12.1.0",
     "markdown-it-container": "^3.0.0",
     "markdown-it-inline-comments": "^1.0.1",
     "merge-stream": "^2.0.0",
-    "node-red": "^1.2.9",
-    "nodemon": "^2.0.7"
+    "node-red": "^2.0.1",
+    "nodemon": "^2.0.12",
+    "postcss": "^8.3.5",
+    "sass": "^1.35.2"
   }
 }

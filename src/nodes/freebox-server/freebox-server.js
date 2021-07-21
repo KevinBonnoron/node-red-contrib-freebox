@@ -214,21 +214,24 @@ module.exports = function (RED) {
     }
 
     /**
+     * apiCall
+     * 
      * @param {string} url 
      * @param {object} options 
      */
-    apiCall(url, options = {}) {
+    async apiCall(url, options = {}) {
       const { method = 'GET' } = options;
       RED.log.info(`${method} ${url}`);
 
+      await this.refreshSession();
+      
       // Add the needed header for authentication
-      return this.refreshSession().then(() => {
-        const { headers = {} } = options;
-        headers['X-Fbx-App-Auth'] = this.session.token;
-        options.headers = headers;
-  
-        return this._internalApiCall(url, options);
-      });
+      
+      const { headers = {} } = options;
+      headers['X-Fbx-App-Auth'] = this.session.token;
+      options.headers = headers;
+
+      return this._internalApiCall(url, options);
     }
 
     /**
@@ -248,11 +251,12 @@ module.exports = function (RED) {
       };
 
       return axios(callOptions)
-        .then(({ data }) => data.result)
         .catch((response) => {
           RED.log.error(`${response.config.method} ${response.config.url} error: ${util.inspect(response)}`);
-          return response;
-        });
+          this._statusChanged.emit('error');
+          return { result: null, success: false };
+        })
+        .then(({ data }) => data.result);
     }
 
     get statusChanged() {

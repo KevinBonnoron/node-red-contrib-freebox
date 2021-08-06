@@ -5,6 +5,7 @@ RED.nodes.registerType('api', {
   outputs: 1,
   defaults: {
     name: { value: '' },
+    url: { value: '' },
     server: { value: '', type: 'freebox-server', required: true },
   },
   icon: 'freebox.png',

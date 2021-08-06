@@ -42,7 +42,7 @@ class BaseNode {
         return done();
       }
 
-      const { url, payload, method, ...rest } = this.getData(msg);
+      const { url, payload, method, ...rest } = this.getData({ ...config, ...msg });
       if (url === undefined) {
         node.status(STATUSES.URL_PARAMETER_MANDATORY);
         return done();

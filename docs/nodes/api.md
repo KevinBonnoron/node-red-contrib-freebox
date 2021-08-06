@@ -1,6 +1,6 @@
 # API
 
-This API provides a way to call api via the msg.url parameter (you can pass msg.payload as the body)
+This API provides a way to call api via the url parameter or msg.url parameter if passed (you can pass msg.payload as the body).
 
 ## Configuration
 

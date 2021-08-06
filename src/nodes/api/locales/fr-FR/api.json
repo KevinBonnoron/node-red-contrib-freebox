@@ -1,6 +1,7 @@
 {
   "label": {
     "name": "Nom",
+    "url": "Url",
     "server": "Serveur"
   }
 }

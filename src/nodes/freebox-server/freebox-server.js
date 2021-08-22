@@ -252,11 +252,12 @@ module.exports = function (RED) {
 
       return axios(callOptions)
         .catch((response) => {
-          RED.log.error(`${response.config.method} ${response.config.url} error: ${util.inspect(response)}`);
+          RED.log.error(`${response.config.method} ${response.config.url}`);
+          RED.log.debug(`error: ${util.inspect(response)}`);
           this._statusChanged.emit('error');
           return { result: null, success: false };
         })
-        .then(({ data }) => data.result);
+        .then(({ data }) => data?.result);
     }
 
     get statusChanged() {

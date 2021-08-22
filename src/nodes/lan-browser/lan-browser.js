@@ -12,7 +12,8 @@ module.exports = (RED) => {
       return {
         ...msg,
         url: '/lan/browser/pub',
-        method: 'GET'
+        method: 'GET',
+        payload: undefined
       };
     }
   }

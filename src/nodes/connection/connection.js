@@ -13,6 +13,7 @@ module.exports = (RED) => {
         ...msg,
         url: '/connection',
         method: 'GET',
+        payload: undefined
       }
     }
   }

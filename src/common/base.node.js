@@ -32,25 +32,23 @@ class BaseNode {
       serverNode.statusChanged.on('application.timeout', () => node.status(STATUSES.SERVER_VALIDATION_TIMEOUT));
       serverNode.statusChanged.on('application.error', () => node.status(STATUSES.INVALID_CONFIGURATION));
       serverNode.statusChanged.on('disconnected', () => node.status(STATUSES.DISCONNECTED));
-      serverNode.statusChanged.on('error', () => node.status(STATUSES.ERROR));
     }
 
     node.on('input', (msg, send, done) => {
-      send = send || function () { node.send.apply(node, arguments) };
       if (!serverNode || !serverNode.freebox) {
         RED.log.info('Freebox server is not configured');
         return done();
       }
 
-      const { url, payload, method, ...rest } = this.getData({ ...config, ...msg });
+      const { url, payload, method, ...rest } = this.getData({ url: config.url, ...msg });
       if (url === undefined) {
         node.status(STATUSES.URL_PARAMETER_MANDATORY);
         return done();
       }
 
       // Call the api
-      serverNode.apiCall(url, { method, data: payload }).then((payload) => {
-        node.send({ payload, ...rest });
+      serverNode.apiCall(url, { method, data: payload }).then((result) => {
+        send({ payload: result, ...rest });
         node.status(STATUSES.CALLED_AT.build(prettyDate()))
         done();
       });

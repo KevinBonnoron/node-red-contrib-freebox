@@ -44,7 +44,8 @@ const nodeMap = {
   'freebox-server': { doc: 'freebox-server', type: 'freebox-server' },
   connection: { doc: 'connection', type: 'connection' },
   'lan-browser': { doc: 'lan-browser', type: 'lan-browser' },
-  api: { doc: 'api', type: 'api' }
+  api: { doc: 'api', type: 'api' },
+  poll: { doc: 'poll', type: 'poll' },
 };
 
 let nodemonInstance;

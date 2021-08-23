@@ -1,0 +1,5 @@
+# Poll node examples
+Here you will find some examples to use the poll node. You need to know the endpoint url. Don't forget to put a _filter_ node after the poll to avoid same message.
+
+## GET /call/log example
+>[{"id":"33fb19191fdd9a3b","type":"tab","label":"Flow 1","disabled":false,"info":""},{"id":"749e95c6989db1db","type":"poll","z":"33fb19191fdd9a3b","name":"Each 1s get call log","url":"/call/log/","interval":1000,"server":"f05c93ac5c99e6d7","x":290,"y":380,"wires":[["5bbd93cc4c15692b"]]},{"id":"5bbd93cc4c15692b","type":"rbe","z":"33fb19191fdd9a3b","name":"","func":"rbe","gap":"","start":"","inout":"out","septopics":true,"property":"payload","topi":"topic","x":470,"y":380,"wires":[["a7def602df77215c"]]},{"id":"a7def602df77215c","type":"debug","z":"33fb19191fdd9a3b","name":"","active":true,"tosidebar":true,"console":false,"tostatus":false,"complete":"false","statusVal":"","statusType":"auto","x":630,"y":380,"wires":[]},{"id":"f05c93ac5c99e6d7","type":"freebox-server","host":"https://mafreebox.freebox.fr","port":"443"}]

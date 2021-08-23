@@ -4,9 +4,10 @@ Ce package ajoute les noeuds pour faire des appels aux API de votre freebox.
 La documentation des API de la freebox se trouve [ici](https://dev.freebox.fr/sdk/os/).
 
 Noeuds inclus :
- - lan browser (appel /lan/browser/pub)
- - connection (appel /connection)
- - api (permet de faire un appel à n'importe quelle url avec le paramètre _msg.url_)
+ - ## [lan browser](/examples/nodes/fr/lan_browser.md) (appel /lan/browser/pub)
+ - ## [connection](/examples/nodes/fr/connection.md) (appel /connection)
+ - ## [api](/examples/nodes/fr/api.md) (permet de faire un appel à n'importe quel endpoint avec le _paramètre url_ **ou** _msg.url_)
+ - ## [poll](/examples/nodes/fr/poll.md) (permet de faire un appel toutes les x millisecondes vers le endpoint avec le _paramètre url_ **ou** _msg.url_)
 
 ## Installation
 ```

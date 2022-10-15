@@ -1,11 +1,12 @@
 {
   "name": "node-red-contrib-freebox",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Freebox api calls for node-red",
   "keywords": [
     "node-red",
     "freebox"
   ],
+  "main": "index.js",
   "author": "Kevin Bonnoron",
   "license": "ISC",
   "scripts": {

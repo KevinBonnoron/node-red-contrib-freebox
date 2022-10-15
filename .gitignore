@@ -1,7 +1,5 @@
 node_modules
 src/nodes/**/*.html
 !src/nodes/**/ui-*.html
-.vscode/
-.devcontainer/
 package-lock.json
 yarn.lock

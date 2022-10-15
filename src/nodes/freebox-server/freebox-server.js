@@ -98,11 +98,11 @@ module.exports = function (RED) {
 
       // Do we already register the app before ?
       if (this.application.trackId) {
-        return this._internalApiCall(`/login/authorize/${this.application.trackId}`).then(({ status }) => {
-          this.application.status = status; // Should be pending until the app is accepted
+        return this._internalApiCall(`/login/authorize/${this.application.trackId}`).then(({ data }) => {
+          this.application.status = data.status; // Should be pending until the app is accepted
 
           // The user must accept the app on the box
-          switch (status) {
+          switch (data.status) {
             case 'pending':
               const currentTimestamp = new Date().getDate();
               if (this._lastPendingCheck === undefined || currentTimestamp > this._lastPendingCheck + REGISTER_APPLICATION_TIMEOUT) {
@@ -138,13 +138,14 @@ module.exports = function (RED) {
 
 
             default:
-              RED.log.error(`Register application failed. Status is ${status}. Deleting credentials`);
+              RED.log.error(`Register application failed. Status is ${data.status}. Deleting credentials`);
               this._statusChanged.emit('application.unknown');
 
               RED.nodes.deleteCredentials(node.id);
               this.credentials = {};
               this.application = {};
               this.session = {};
+              this.registerApplication();
           }
         });
       } else {
@@ -155,7 +156,8 @@ module.exports = function (RED) {
           device_name: APPLICATION.deviceName,
         };
 
-        return this._internalApiCall('/login/authorize', { data }).then(({ app_token, track_id }) => {
+        return this._internalApiCall('/login/authorize', { data }).then(({ data }) => {
+          const { app_token, track_id } = data;
           RED.log.info('Register app token ' + app_token);
           this.application.token = app_token;
           this.application.trackId = track_id;
@@ -177,7 +179,8 @@ module.exports = function (RED) {
         return Promise.resolve();
       }
 
-      return this._internalApiCall('/login').then(({ logged_in, challenge }) => {
+      return this._internalApiCall('/login').then(({ data }) => {
+        const { logged_in, challenge } = data;
         // If we're not logged_in
         if (!logged_in) {
           const data = {
@@ -187,7 +190,9 @@ module.exports = function (RED) {
           };
 
           // Requesting new session
-          return this._internalApiCall('/login/session', { data }).then(({ session_token, permissions }) => {
+          return this._internalApiCall('/login/session', { data }).then(({ data }) => {
+            const { session_token, permissions } = data;
+
             RED.log.info(`Session opened`);
             this._statusChanged.emit('session.opened');
 
@@ -220,8 +225,9 @@ module.exports = function (RED) {
      * @param {object} options 
      */
     async apiCall(url, options = {}) {
+      const { freebox } = this;
       const { method = 'GET' } = options;
-      RED.log.info(`${method} ${url}`);
+      RED.log.info(`${method} ${freebox.baseUrl}${url}`);
 
       await this.refreshSession();
       
@@ -252,12 +258,17 @@ module.exports = function (RED) {
 
       return axios(callOptions)
         .catch((response) => {
-          RED.log.error(`${response.config.method} ${response.config.url}`);
-          RED.log.debug(`error: ${util.inspect(response)}`);
+          if (response instanceof Error) {
+            RED.log.error(response);
+          } else {
+            RED.log.debug(`error: ${util.inspect(response)}`);
+            RED.log.error(`${response.config.method} ${response.config.url}`);
+          }
+
           this._statusChanged.emit('error');
-          return { result: null, success: false };
+          return { data: { result: {} }, status: 500 };
         })
-        .then(({ data }) => data?.result);
+        .then(({ data, ...rest }) => ({ data: data?.result, ...rest }));
     }
 
     get statusChanged() {

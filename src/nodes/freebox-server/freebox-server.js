@@ -268,7 +268,17 @@ module.exports = function (RED) {
           this._statusChanged.emit('error');
           return { data: { result: {} }, status: 500 };
         })
-        .then(({ data, ...rest }) => ({ data: data?.result, ...rest }));
+        .then(({ data, ...rest }) => {
+          if (!data.success) {
+            return { data: undefined };
+          }
+
+          if (data.result) {
+            return ({ data: data?.result, ...rest });
+          }
+
+          return ({ data, ...rest })
+        });
     }
 
     get statusChanged() {

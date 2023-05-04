@@ -41,14 +41,14 @@ class BaseNode {
         return done();
       }
 
-      const { url, payload, method, ...rest } = this.getData({ url: config.url, ...msg });
+      const { url, payload, method, reponseType, ...rest } = this.getData({ url: config.url, ...msg });
       if (url === undefined) {
         node.status(STATUSES.URL_PARAMETER_MANDATORY);
         return done();
       }
 
       // Call the api
-      serverNode.apiCall(url, { method, data: payload }).then(({ data, status }) => {
+      serverNode.apiCall(url, { method, data: payload, reponseType }).then(({ data, status }) => {
         if (status === 200) {
           node.status(STATUSES.CALLED_AT.build(prettyDate()))
           send({ payload: data, ...rest });
@@ -60,12 +60,13 @@ class BaseNode {
   }
 
   getData(msg) {
-    const { url, payload, method = payload !== undefined ? 'POST' : 'GET', ...rest } = msg;
+    const { url, payload, method, reponseType = 'json', ...rest } = msg;
 
     return {
       url,
       payload,
       method,
+      reponseType,
       ...rest
     }
   }

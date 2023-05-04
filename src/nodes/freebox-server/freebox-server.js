@@ -269,15 +269,11 @@ module.exports = function (RED) {
           return { data: { result: {} }, status: 500 };
         })
         .then(({ data, ...rest }) => {
-          if (!data.success) {
-            return { data: undefined };
-          }
-
           if (data.result) {
             return ({ data: data?.result, ...rest });
           }
 
-          return ({ data, ...rest })
+          return ({ data, ...rest });
         });
     }
 

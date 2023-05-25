@@ -1,6 +1,5 @@
 'use strict';
 
-const nodeRed = require('node-red');
 const BaseNode = require('../../common/base.node');
 
 module.exports = (RED) => {

@@ -3,7 +3,7 @@ const https = require('https');
 const axios = require('axios');
 const util = require('util');
 const { EventEmitter } = require('events');
-const package = require(`${process.cwd()}/package.json`);
+const package = require('../../../package.json');
 
 const APPLICATION = {
   appId: package.name,

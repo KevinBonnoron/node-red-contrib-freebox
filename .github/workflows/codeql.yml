@@ -1,0 +1,20 @@
+name: codeql
+
+on:
+  pull_request:
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: initialize codeql
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript
+
+      - name: perform codeql analysis
+        uses: github/codeql-action/analyze@v2

@@ -46,7 +46,6 @@ module.exports = function (RED) {
       };
 
       this._statusChanged = new EventEmitter();
-      node.on('close', () => this.logout());
 
       this.init(config);
     }
@@ -203,18 +202,6 @@ module.exports = function (RED) {
             this.session.lastGenerationTimestamp = new Date().getTime();
           });
         }
-      });
-    }
-
-    /**
-     * logout
-     *
-     * @return void
-     */
-    logout() {
-      this.apiCall('/login/logout', { method: 'POST' }).then(() => {
-        RED.log.info('Session closed');
-        this._statusChanged.emit('session.closed');
       });
     }
 

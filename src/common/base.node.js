@@ -2,8 +2,8 @@
 const prettyDate = require('../helpers/date.helper');
 
 const STATUSES = {
-  NOT_CONNECTED: { fill: 'red', shape: 'ring', text: 'not connected' },
-  CONNECTED: { fill: 'green', shape: 'dot', text: 'connected' },
+  NOT_CONNECTED: { fill: 'red', shape: 'ring', text: 'node-red:common.status.not-connected' },
+  CONNECTED: { fill: 'green', shape: 'dot', text: 'node-red:common.status.connected' },
   SERVER_VALIDATION_PENDING: { fill: 'yellow', shape: 'dot', text: 'server validation pending' },
   SERVER_VALIDATION_TIMEOUT: { fill: 'orange', shape: 'dot', text: 'server validation timeout' },
   INVALID_CONFIGURATION: { fill: 'red', shape: 'dot', text: 'invalid configuration' },

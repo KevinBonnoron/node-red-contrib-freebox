@@ -8,12 +8,10 @@ module.exports = (RED) => {
       super(config, RED);
     }
 
-    getData(msg) {
+    getData() {
       return {
-        ...msg,
         url: '/lan/browser/pub',
-        method: 'GET',
-        payload: undefined
+        method: 'GET'
       };
     }
   }
